@@ -18,13 +18,13 @@ class MainTabBarController: UITabBarController {
     }()
     
     private lazy var rideListVC: UINavigationController = {
-        let nc = UINavigationController(rootViewController: BlueToothViewController())
+        let nc = UINavigationController()
         nc.tabBarItem = UITabBarItem(title: "Ride List", image: UIImage(systemName: "list.bullet"), tag: 1)
         return nc
     }()
     
     private lazy var mapVC: UINavigationController = {
-        let nc = UINavigationController(rootViewController: BlueToothViewController())
+        let nc = UINavigationController()
         nc.tabBarItem = UITabBarItem(title: "Map", image: UIImage(systemName: "map"), tag: 2)
         return nc
     }()
@@ -36,7 +36,7 @@ class MainTabBarController: UITabBarController {
     }()
     
     private lazy var settingsVC: UINavigationController = {
-        let nc = UINavigationController(rootViewController: BlueToothViewController())
+        let nc = UINavigationController()
         nc.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gearshape"), tag: 4)
         return nc
     }()
