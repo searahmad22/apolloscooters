@@ -8,12 +8,14 @@
 import UIKit
 import SnapKit
 import CoreBluetooth
+import Combine
 
 class BlueToothViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     // MARK: - Properties
     private var availableDevices: [CBPeripheral] = []
-    private let centralManager = CBCentralManager()
+    private var bluetoothManager: BluetoothManager!
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - UI
     private lazy var blueToothIconImageView: UIImageView = {
@@ -51,12 +53,23 @@ class BlueToothViewController: UIViewController, UITableViewDelegate, UITableVie
     }()
     
     private lazy var scanButton = ApolloPrimaryButton(title: "Scan") { [weak self] in
-        self?.centralManager.isScanning ?? false ? self?.stopScanning() : self?.startScanning()
+        (self?.bluetoothManager.isScanning)! ? self?.stopScanning() : self?.startScanning()
     }
-
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        bluetoothManager = BluetoothManager(centralManager: CBCentralManager())
+        setupUI()
+        makeConstraints()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        checkBluetoothState()
+    }
+    
+    private func setupUI() {
         view.backgroundColor = .black
         
         view.addSubview(blueToothIconImageView)
@@ -64,20 +77,10 @@ class BlueToothViewController: UIViewController, UITableViewDelegate, UITableVie
         view.addSubview(subtitleLabel)
         view.addSubview(devicesTableView)
         view.addSubview(scanButton)
-        
-        centralManager.delegate = self
-        
-        makeConstraints()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        checkBluetoothState(by: centralManager)
     }
     
     // MARK: - Constraints
     private func makeConstraints() {
-        
         let screenHeight = UIScreen.main.bounds.height
         
         blueToothIconImageView.snp.makeConstraints { make in
@@ -122,7 +125,7 @@ class BlueToothViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "Scooters Found: "
+        return "Scooters Found:"
     }
     
     // MARK: - Animations
@@ -139,26 +142,63 @@ class BlueToothViewController: UIViewController, UITableViewDelegate, UITableVie
     }
 }
 
-extension BlueToothViewController: CBCentralManagerDelegate {
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        switch central.state {
-        case .poweredOn:
-            break
+extension BlueToothViewController {
+    // MARK: - Bluetooth
+    private func didDiscoverPeripheralPublisher() {
+        bluetoothManager.discoveredPeripheralPublisher
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { error in
+                self.showError(error: error)
+                
+            }, receiveValue: { peripheral in
+                if !self.availableDevices.contains(peripheral) {
+                    self.availableDevices.insert(peripheral, at: 0)
+                    self.devicesTableView.reloadData()
+                }
+            })
+            .store(in: &cancellables)
+    }
+    
+    private func checkBluetoothState() {
+        bluetoothManager.centralStatePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { state in
+                switch state {
+                case .poweredOn:
+                    self.devicesTableView.isHidden = false
+                    self.availableDevices = []
 
-        case .poweredOff:
-            stopBluetoothAnimating()
-        default:
-            break
-        }
+                case .poweredOff:
+                    self.devicesTableView.isHidden = true
+                    self.showAlert(title: "Bluetooth is off", message: "Please turn on Bluetooth in Settings", actionTitle: "Go to Settings")
+                    self.stopBluetoothAnimating()
+                default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
     }
     
-    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        if !availableDevices.contains(peripheral) {
-            availableDevices.insert(peripheral, at: 0)
-            devicesTableView.reloadData()
-        }
+    private func startScanning() {
+        bluetoothManager.startScanning()
+        didDiscoverPeripheralPublisher()
+        self.titleLabel.text = "SEARCHING"
+        self.scanButton.setTitle("Stop", for: .normal)
+        startBlutoothAnimating()
     }
     
+    private func stopScanning() {
+        bluetoothManager.stopScanning()
+        if availableDevices.isEmpty {
+            self.titleLabel.text = "NO SCOOTERS FOUND"
+        } else {
+            self.titleLabel.text = "READY TO SEARCH"
+        }
+        self.scanButton.setTitle("Scan", for: .normal)
+        stopBluetoothAnimating()
+    }
+    
+    // MARK: - Alerts
     private func showAlert(title: String, message: String, actionTitle: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let action = UIAlertAction(title: actionTitle, style: .default) { (action) in
@@ -173,46 +213,10 @@ extension BlueToothViewController: CBCentralManagerDelegate {
         present(alert, animated: true, completion: nil)
     }
     
-    private func checkBluetoothState(by centralManager: CBCentralManager) {
-        switch centralManager.state {
-        case .poweredOn:
-            break
-            
-        case .poweredOff:
-            showAlert(title: "Bluetooth is off", message: "Please turn on Bluetooth in Settings", actionTitle: "Go to Settings")
-            
-        default:
-            break
-        }
-    }
-    
-    private func startScanning() {
-        guard centralManager.state == .poweredOn else {
-            showAlert(title: "Bluetooth is not available", message: "Make sure that your device's Bluetooth is turned on.", actionTitle: "OK")
-            return
-        }
-        if !centralManager.isScanning {
-            centralManager.scanForPeripherals(withServices: nil, options: nil)
-            self.titleLabel.text = "SEARCHING"
-            self.scanButton.setTitle("Stop", for: .normal)
-            startBlutoothAnimating()
-        }
-    }
-
-    private func stopScanning() {
-        if centralManager.isScanning {
-            centralManager.stopScan()
-            
-            if self.availableDevices.isEmpty {
-                self.titleLabel.text = "NO SCOOTERS FOUND!"
-                devicesTableView.reloadData()
-            } else {
-                self.titleLabel.text = "READY TO SEARCH"
-            }
-            
-            self.scanButton.setTitle("Scan", for: .normal)
-            stopBluetoothAnimating()
-        }
+    private func showError(error: Subscribers.Completion<Error>) {
+        let errorAlert = UIAlertController(title: "Error", message: "Something went wrong. \(error)", preferredStyle: .alert)
+        let dismissAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        errorAlert.addAction(dismissAction)
+        present(errorAlert, animated: true, completion: nil)
     }
 }
-

@@ -21,6 +21,7 @@
 		14BD22D529C3924600064453 /* PrimaryTableViewHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BD22D429C3924600064453 /* PrimaryTableViewHeader.swift */; };
 		14BD22D829C42BC300064453 /* NSObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BD22D729C42BC300064453 /* NSObject.swift */; };
 		14BD22DA29C43D6500064453 /* ApolloPrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BD22D929C43D6500064453 /* ApolloPrimaryButton.swift */; };
+		14BD22DF29C492BD00064453 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BD22DE29C492BD00064453 /* BluetoothManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		14BD22D429C3924600064453 /* PrimaryTableViewHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryTableViewHeader.swift; sourceTree = "<group>"; };
 		14BD22D729C42BC300064453 /* NSObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSObject.swift; sourceTree = "<group>"; };
 		14BD22D929C43D6500064453 /* ApolloPrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApolloPrimaryButton.swift; sourceTree = "<group>"; };
+		14BD22DE29C492BD00064453 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +78,7 @@
 				14BD22BF29C2DE8D00064453 /* Screens */,
 				14BD22DB29C44C7D00064453 /* Components */,
 				14BD22D629C42BA400064453 /* Extensions */,
+				14BD22DE29C492BD00064453 /* BluetoothManager.swift */,
 				14BD228E29C04C7B00064453 /* Assets.xcassets */,
 				14BD229329C04C7B00064453 /* Info.plist */,
 			);
@@ -231,6 +234,7 @@
 			files = (
 				14BD22D529C3924600064453 /* PrimaryTableViewHeader.swift in Sources */,
 				14BD22D829C42BC300064453 /* NSObject.swift in Sources */,
+				14BD22DF29C492BD00064453 /* BluetoothManager.swift in Sources */,
 				14BD22C429C2E29C00064453 /* StorePrimaryTableViewCell.swift in Sources */,
 				14BD22C229C2DF1C00064453 /* StoreViewController.swift in Sources */,
 				14BD22CB29C2EF7000064453 /* MainTabBarController.swift in Sources */,

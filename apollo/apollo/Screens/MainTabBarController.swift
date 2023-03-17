@@ -43,6 +43,7 @@ class MainTabBarController: UITabBarController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        overrideUserInterfaceStyle = .dark
         viewControllers = [homeVC, rideListVC, mapVC, storeVC, settingsVC]
         selectedIndex = 3
         tabBar.tintColor = .systemBlue
